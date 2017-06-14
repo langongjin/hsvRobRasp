@@ -8,21 +8,25 @@ using namespace std;
 using namespace cv;
 
 Mat img, imgF, imgHSV, imgGreen, imgGreen1, imgGreen2, imgBlue;
+//int rLowH1=0,rHighH1=10,rLowH2=170,rHighH2=180,rLowS=160,rHighS=255,rLowV=120,rHighV=255; //red
+int gLowH1=35,gHighH1=40,gLowH2=41,gHighH2=59,gLowS1=140,gLowS2=69,gHighS=255,gLowV=104,gHighV=255; //green
+int bLowH=99,bHighH=121,bLowS=120,bHighS=255,bLowV=57,bHighV=211; //blue
+//int yLowH=26,yHighH=32,yLowS=130,yHighS=255,yLowV=150,yHighV=255; // yellow
 
+struct timeval timeStart, timeEnd;
 void colorDetector(Mat img)
 {
-    medianBlur(img, imgF, 5); // median filting image with 5*5 size
+    //gettimeofday(&timeStart,NULL);
+    medianBlur(img, imgF, 5); //median filting image with 5*5 size, time=5~6ms
+    //gettimeofday(&timeEnd,NULL);
 
-    //int rLowH1=0,rHighH1=10,rLowH2=170,rHighH2=180,rLowS=160,rHighS=255,rLowV=120,rHighV=255; //red
-    int gLowH1=35,gHighH1=40,gLowH2=41,gHighH2=59,gLowS1=140,gLowS2=69,gHighS=255,gLowV=104,gHighV=255; //green
-    int bLowH=99,bHighH=121,bLowS=120,bHighS=255,bLowV=57,bHighV=211; //blue
-    //int yLowH=26,yHighH=32,yLowS=130,yHighS=255,yLowV=150,yHighV=255; // yellow
+    cvtColor(imgF, imgHSV, COLOR_BGR2HSV); //convert the RGB image to HSV, opencv is BGR time=1s
 
-    cvtColor(imgF, imgHSV, COLOR_BGR2HSV); //convert the RGB image to HSV, opencv is BGR
-
-    inRange(imgHSV, Scalar(bLowH,bLowS, bLowV),Scalar(bHighH,bHighS, bHighV),imgBlue); //detecting Blue
+    //time=6ms
+    inRange(imgHSV, Scalar(bLowH,bLowS, bLowV),Scalar(bHighH,bHighS, bHighV),imgBlue); //detecting Blue,
     inRange(imgHSV, Scalar(gLowH1,gLowS1, gLowV),Scalar(gHighH1,gHighS, gHighV),imgGreen1); //detecting green
     inRange(imgHSV, Scalar(gLowH2,gLowS2, gLowV),Scalar(gHighH2,gHighS, gHighV),imgGreen2);
+
     //inRange(imgHSV, Scalar(rLowH1,rLowS, rLowV),Scalar(rHighH1,rHighS, rHighV),imgRed1); //detecting red
     //inRange(imgHSV, Scalar(rLowH2,rLowS, rLowV),Scalar(rHighH2,rHighS, rHighV),imgRed2);
     //inRange(imgHSV, Scalar(yLowH,yLowS, yLowV),Scalar(yHighH,yHighS, yHighV),imgYellow); // detecting yellow
@@ -32,11 +36,13 @@ void colorDetector(Mat img)
 
     vector<vector<Point> > contoursBlue, contoursGreen; //contoursRed, contoursYellow; //define the 2D point vector to save the coordinate (x,y) of contours
 
+    //time=0ms
     findContours(imgBlue,contoursBlue,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_NONE);
     findContours(imgGreen,contoursGreen,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_NONE);
     //findContours(imgRed,contoursRed,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_NONE);
     //findContours(imgYellow,contoursYellow,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_NONE);
 
+    //time=2ms from here to the end
     int jB = 0, jG = 0, jR = 0, jY = 0;
     Rect rectCoor[100], rectCoorBlue[10], rectCoorGreen[10]; //rectCoorRed[10],rectCoorYellow[10];
     for (int i = 0; i < contoursBlue.size(); i++)  //calculate the area, center of block and robot, boundaries/rectangles of block and robot
@@ -129,11 +135,11 @@ void colorDetector(Mat img)
             if (i != j) // get the Box[i] sequence
             {
                 if (distanceBoxSum[i] > distanceBoxSum[j])
-                    numBox[i] = numBox[i] +1; //save the number
+                    numBox[i]+=1; //numBox[i] = numBox[i] +1, save the number
                 if (distanceBoxSum[i] == distanceBoxSum[j])
                 {
                     if (minDistanceBox[i] >= minDistanceBox[j]) //always have the same distance between two points each other
-                        numBox[i] = numBox[i] +1;
+                        numBox[i]+=1; //
                 }
             }
         }
@@ -272,7 +278,7 @@ void colorDetector(Mat img)
 }
 
 int main() {
-    struct timeval timeStart, timeEnd;
+    //struct timeval timeStart, timeEnd;
     double timeDiff;
 
     VideoCapture cap(0); //open the first camera
