@@ -12,13 +12,11 @@ Mat img, imgF, imgHSV, imgGreen, imgGreen1, imgGreen2, imgBlue;
 int gLowH1=35,gHighH1=40,gLowH2=41,gHighH2=59,gLowS1=140,gLowS2=69,gHighS=255,gLowV=104,gHighV=255; //green
 int bLowH=99,bHighH=121,bLowS=120,bHighS=255,bLowV=57,bHighV=211; //blue
 //int yLowH=26,yHighH=32,yLowS=130,yHighS=255,yLowV=150,yHighV=255; // yellow
-
 struct timeval timeStart, timeEnd;
-void colorDetector(Mat img)
+
+void colorDetector(Mat imgF)
 {
-    //gettimeofday(&timeStart,NULL);
-    medianBlur(img, imgF, 5); //median filting image with 5*5 size, time=5~6ms
-    //gettimeofday(&timeEnd,NULL);
+    medianBlur(imgF, imgF, 5); //median filting image with 5*5 size, time=5~6ms
 
     cvtColor(imgF, imgHSV, COLOR_BGR2HSV); //convert the RGB image to HSV, opencv is BGR time=1s
 
@@ -49,7 +47,7 @@ void colorDetector(Mat img)
     {
         double imgBlueAreaBuf = contourArea(contoursBlue[i]); //contours: the points of contours
 
-        if (imgBlueAreaBuf > 60){
+        if (imgBlueAreaBuf > 5){
             rectCoorBlue[jB] = boundingRect(contoursBlue[i]);
             rectCoor[jB] = rectCoorBlue[jB];
             jB++;
@@ -59,7 +57,7 @@ void colorDetector(Mat img)
     for (int i = 0; i < contoursGreen.size(); i++)  //calculate the area, center of block and robot, boundaries/rectangles of block and robot
     {
         double imgGreenAreaBuf = contourArea(contoursGreen[i]); //contours: the points of contours
-        if (imgGreenAreaBuf > 60){
+        if (imgGreenAreaBuf > 5){
 
             rectCoorGreen[jG] = boundingRect(contoursGreen[i]);
             rectCoor[jB+jG] = rectCoorGreen[jG];
@@ -105,8 +103,8 @@ void colorDetector(Mat img)
 
     for (int j = 0; j < num; j++) //calculating the value of minimum and the second minimum distance for each box
     {
-        minDistanceBox[j] = 1600;
-        min2DistanceBox[j] = 1600;
+        minDistanceBox[j] = 800;
+        min2DistanceBox[j] = 800;
         for (int x = 0; x < num; x++)
         {
             if (j != x)
@@ -262,18 +260,36 @@ void colorDetector(Mat img)
 
     for (int i = 0; i < robNum; i++)
     {
-        rectangle(imgF, Point(minRectCoorX[i],minRectCoorY[i]),Point(maxRectCoorX[i],maxRectCoorY[i]),Scalar(0,255,0),1);
+        rectangle(img, Point(4*minRectCoorX[i],4*minRectCoorY[i]),Point(4*maxRectCoorX[i],4*maxRectCoorY[i]),Scalar(0,255,0),1);
 
-        int robCenterCoorX = (minRectCoorX[i] + maxRectCoorX[i])/2;
-        int robCenterCoorY = (minRectCoorY[i] + maxRectCoorY[i])/2;
-        circle(imgF,Point(robCenterCoorX,robCenterCoorY),3,Scalar(0,255,0),4);
-        char textRobCenterCoor[64];
+        int robCenterCoorX = 2*(minRectCoorX[i] + maxRectCoorX[i]);
+        int robCenterCoorY = 2*(minRectCoorY[i] + maxRectCoorY[i]);
+        circle(img,Point(robCenterCoorX,robCenterCoorY),3,Scalar(0,255,0),4);
+        char textRobCenterCoor[64], textDistance[64];
         snprintf(textRobCenterCoor, sizeof(textRobCenterCoor),"(%d,%d)",robCenterCoorX,robCenterCoorY);
-        putText(imgF, textRobCenterCoor, Point(robCenterCoorX + 10,robCenterCoorY+3),FONT_HERSHEY_DUPLEX,0.4,Scalar(0,255,0),1);
-        line(imgF, Point(minRectCoorX[i],minRectCoorY[i]), Point(maxRectCoorX[i],maxRectCoorY[i]),Scalar(0,255,0),1);
-        line(imgF, Point(minRectCoorX[i],maxRectCoorY[i]), Point(maxRectCoorX[i],minRectCoorY[i]),Scalar(0,255,0),1);
+        putText(img, textRobCenterCoor, Point(robCenterCoorX + 10,robCenterCoorY+3),FONT_HERSHEY_DUPLEX,0.4,Scalar(0,255,0),1);
+
+        if (robCenterCoorX < 300)
+        {
+            int distance = 300 - robCenterCoorX;
+            snprintf(textDistance, sizeof(textDistance),"L:%d",distance);
+            putText(img, textDistance, Point(130,15),FONT_HERSHEY_DUPLEX,0.6,Scalar(0,255,0),1);
+        }
+
+        if (robCenterCoorX > 500)
+        {
+            int distance = robCenterCoorX - 500;
+            snprintf(textDistance, sizeof(textDistance),"R:%d",distance);
+            putText(img, textDistance, Point(650,15),FONT_HERSHEY_DUPLEX,0.6,Scalar(0,255,0),1);
+        }
+
+        line(img, Point(4*minRectCoorX[i],4*minRectCoorY[i]), Point(4*maxRectCoorX[i],4*maxRectCoorY[i]),Scalar(0,255,0),1);
+        line(img, Point(4*minRectCoorX[i],4*maxRectCoorY[i]), Point(4*maxRectCoorX[i],4*minRectCoorY[i]),Scalar(0,255,0),1);
+        line(img, Point(300,0), Point(300,600), Scalar(0,255,0),1);
+        line(img, Point(500,0), Point(500,600), Scalar(0,255,0),1);
+
     }
-    imshow("image", imgF);
+    imshow("image", img);
     //waitKey(0);
 }
 
@@ -286,15 +302,14 @@ int main() {
     if(!cap.isOpened()) //check for successful open, or not
         cerr << "Can not open a camera or file." << endl;
 
-    //int rate = cap.get(CV_CAP_PROP_FPS); get the frame
-
     bool stop = false;
     while(!stop)
     {
         cap >> img; //read a frame image and save to the Mat img
-
+        cout << img.cols << img.rows << endl;
+        resize(img, imgF, Size(200,150));
         gettimeofday(&timeStart,NULL);
-        colorDetector(img);
+        colorDetector(imgF);
         gettimeofday(&timeEnd,NULL);
         timeDiff = 1000*(timeEnd.tv_sec - timeStart.tv_sec) + (timeEnd.tv_usec - timeStart.tv_usec)/1000; //tv_sec: value of second, tv_usec: value of microsecond
         cout << "Time for one frame : " << timeDiff << " ms" << endl;
