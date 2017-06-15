@@ -306,7 +306,6 @@ int main() {
     while(!stop)
     {
         cap >> img; //read a frame image and save to the Mat img
-        cout << img.cols << img.rows << endl;
         resize(img, imgF, Size(200,150));
         gettimeofday(&timeStart,NULL);
         colorDetector(imgF);
