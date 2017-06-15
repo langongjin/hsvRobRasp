@@ -260,6 +260,8 @@ void colorDetector(Mat imgF)
 
     for (int i = 0; i < robNum; i++)
     {
+        int imgRows = img.rows, imgCols = img.cols;
+
         rectangle(img, Point(4*minRectCoorX[i],4*minRectCoorY[i]),Point(4*maxRectCoorX[i],4*maxRectCoorY[i]),Scalar(0,255,0),1);
 
         int robCenterCoorX = 2*(minRectCoorX[i] + maxRectCoorX[i]);
@@ -269,24 +271,26 @@ void colorDetector(Mat imgF)
         snprintf(textRobCenterCoor, sizeof(textRobCenterCoor),"(%d,%d)",robCenterCoorX,robCenterCoorY);
         putText(img, textRobCenterCoor, Point(robCenterCoorX + 10,robCenterCoorY+3),FONT_HERSHEY_DUPLEX,0.4,Scalar(0,255,0),1);
 
-        if (robCenterCoorX < 300)
+        int leftLine = 0.4 * img.cols;
+        int rightLine = 0.6 * img.cols;
+        if (robCenterCoorX < leftLine)
         {
-            int distance = 300 - robCenterCoorX;
+            int distance = leftLine - robCenterCoorX;
             snprintf(textDistance, sizeof(textDistance),"L:%d",distance);
-            putText(img, textDistance, Point(130,15),FONT_HERSHEY_DUPLEX,0.6,Scalar(0,255,0),1);
+            putText(img, textDistance, Point(0.2*img.cols,15),FONT_HERSHEY_DUPLEX,0.5,Scalar(0,255,0),1);
         }
 
-        if (robCenterCoorX > 500)
+        if (robCenterCoorX > rightLine)
         {
-            int distance = robCenterCoorX - 500;
+            int distance = robCenterCoorX - rightLine;
             snprintf(textDistance, sizeof(textDistance),"R:%d",distance);
-            putText(img, textDistance, Point(650,15),FONT_HERSHEY_DUPLEX,0.6,Scalar(0,255,0),1);
+            putText(img, textDistance, Point(0.8*img.cols,15),FONT_HERSHEY_DUPLEX,0.5,Scalar(0,255,0),1);
         }
 
         line(img, Point(4*minRectCoorX[i],4*minRectCoorY[i]), Point(4*maxRectCoorX[i],4*maxRectCoorY[i]),Scalar(0,255,0),1);
         line(img, Point(4*minRectCoorX[i],4*maxRectCoorY[i]), Point(4*maxRectCoorX[i],4*minRectCoorY[i]),Scalar(0,255,0),1);
-        line(img, Point(300,0), Point(300,600), Scalar(0,255,0),1);
-        line(img, Point(500,0), Point(500,600), Scalar(0,255,0),1);
+        line(img, Point(leftLine,0), Point(leftLine,img.rows), Scalar(0,255,0),1);
+        line(img, Point(rightLine,0), Point(rightLine,img.rows), Scalar(0,255,0),1);
 
     }
     imshow("image", img);
@@ -306,7 +310,12 @@ int main() {
     while(!stop)
     {
         cap >> img; //read a frame image and save to the Mat img
-        resize(img, imgF, Size(200,150));
+        //cout << "img.rows : " << img.rows << "img.cols : " << img.cols << endl;
+        int imgFcols = img.cols/4;
+        int imgFrows = img.rows/4;
+        resize(img, imgF, Size(imgFcols,imgFrows)); //Size(cols, rows)
+        //cout << "imgF.cols : " << imgF.cols << "imgF.rows : " << imgF.rows << endl;
+
         gettimeofday(&timeStart,NULL);
         colorDetector(imgF);
         gettimeofday(&timeEnd,NULL);
@@ -314,7 +323,7 @@ int main() {
         cout << "Time for one frame : " << timeDiff << " ms" << endl;
 
         int c = waitKey(10); //waiting for 5 milliseconds to detect the pression, if waitKey(0) meaning always waiting until any pression
-        if((char) c == 27) // press escape to exit the imshow
+        if((char) c == 27) //press escape to exit the imshow
         {
             stop = true;
         }
