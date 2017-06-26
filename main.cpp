@@ -278,6 +278,7 @@ void colorDetector(Mat imgF)
             int distance = leftLine - robCenterCoorX;
             snprintf(textDistance, sizeof(textDistance),"L:%d",distance);
             putText(img, textDistance, Point(0.2*img.cols,15),FONT_HERSHEY_DUPLEX,0.5,Scalar(0,255,0),1);
+            cout << "Left : " << distance << endl;
         }
 
         if (robCenterCoorX > rightLine)
@@ -285,6 +286,7 @@ void colorDetector(Mat imgF)
             int distance = robCenterCoorX - rightLine;
             snprintf(textDistance, sizeof(textDistance),"R:%d",distance);
             putText(img, textDistance, Point(0.8*img.cols,15),FONT_HERSHEY_DUPLEX,0.5,Scalar(0,255,0),1);
+            cout << "Right : " << distance << endl;
         }
 
         line(img, Point(4*minRectCoorX[i],4*minRectCoorY[i]), Point(4*maxRectCoorX[i],4*maxRectCoorY[i]),Scalar(0,255,0),1);
@@ -293,7 +295,7 @@ void colorDetector(Mat imgF)
         line(img, Point(rightLine,0), Point(rightLine,img.rows), Scalar(0,255,0),1);
 
     }
-    imshow("image", img);
+    //imshow("image", img);
     //waitKey(0);
 }
 
